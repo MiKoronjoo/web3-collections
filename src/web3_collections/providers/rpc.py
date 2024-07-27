@@ -41,7 +41,7 @@ class MultiEndpointHTTPProvider(HTTPProvider):
                 raw_response = make_post_request(
                     self.endpoint_uri, request_data, **self.get_request_kwargs()
                 )
-            except RequestException as ex:
+            except (RequestException, ValueError) as ex:
                 if not self._auto_update:
                     raise
                 self.logger.error(
