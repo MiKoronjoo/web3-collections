@@ -41,6 +41,9 @@ class MultiEndpointHTTPProvider(HTTPProvider):
                 raw_response = make_post_request(
                     self.endpoint_uri, request_data, **self.get_request_kwargs()
                 )
+                response = self.decode_rpc_response(raw_response)
+                if 'error' in response:
+                    raise ValueError(response['error'])
             except (RequestException, ValueError) as ex:
                 if not self._auto_update:
                     raise
@@ -53,7 +56,6 @@ class MultiEndpointHTTPProvider(HTTPProvider):
         else:
             raise RequestException("All endpoints got error")
 
-        response = self.decode_rpc_response(raw_response)
         self.logger.debug(
             f"Getting response HTTP. URI: {self.endpoint_uri}, "
             f"Method: {method}, Response: {response}"
