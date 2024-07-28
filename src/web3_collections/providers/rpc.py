@@ -1,3 +1,4 @@
+from threading import Thread
 from typing import Optional, Union, Any, List
 from collections import deque
 
@@ -23,6 +24,26 @@ class MultiEndpointHTTPProvider(HTTPProvider):
     @property
     def current_endpoint(self):
         return self._uris[0] if self._uris else None
+
+    def sort_endpoints(self):
+        results = {}
+        request_data = self.encode_rpc_request('eth_blockNumber', ())
+        request_kwargs = self.get_request_kwargs()
+
+        def temp_func(uri):
+            raw_response = make_post_request(uri, request_data, **request_kwargs)
+            response = self.decode_rpc_response(raw_response)
+            results[uri] = int(response['result'], 16)
+
+        threads = []
+        for endpoint_uri in self._uris:
+            t = Thread(target=temp_func, args=(endpoint_uri,))
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+
+        self._uris = deque(sorted(self._uris, key=lambda x: results.get(x, 0), reverse=True))
 
     def update_endpoint(self):
         self._uris.rotate(-1)

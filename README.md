@@ -41,3 +41,21 @@ except Exception as e:
     w3.provider.update_endpoint()
     print(f'Endpoint updated to {w3.provider.current_endpoint}')
 ```
+
+Method `MultiEndpointHTTPProvider.sort_endpoints` sorts the endpoints by their latest block number
+(most updated will choose as `current_endpoint`):
+
+```python
+>>> endpoint_uris = [
+...  'https://arbitrum.meowrpc.com',
+...  'https://1rpc.io/arb',
+...  'https://arbitrum-one-rpc.publicnode.com',
+...  'https://arb-pokt.nodies.app'
+... ]
+>>> w3 = web3.Web3(MultiEndpointHTTPProvider(endpoint_uris))
+>>> w3.provider.current_endpoint  # before sorting
+'https://arbitrum.meowrpc.com'
+>>> w3.provider.sort_endpoints()  # sorting by latest block number
+>>> w3.provider.current_endpoint  # after sorting
+'https://arbitrum-one-rpc.publicnode.com'
+```
