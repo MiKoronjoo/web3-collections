@@ -44,6 +44,7 @@ class MultiEndpointHTTPProvider(HTTPProvider):
             t.join()
 
         self._uris = deque(sorted(self._uris, key=lambda x: results.get(x, 0), reverse=True))
+        self.endpoint_uri = URI(self.current_endpoint)
 
     def update_endpoint(self):
         self._uris.rotate(-1)
