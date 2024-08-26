@@ -70,7 +70,7 @@ class MultiEndpointHTTPProvider(HTTPProvider):
                     self.endpoint_uri, request_data, **self.get_request_kwargs()
                 )
                 response = self.decode_rpc_response(raw_response)
-                if 'error' in response:
+                if 'error' in response and 'execution reverted' not in response['error'].get('message', ''):
                     raise ValueError(response['error'])
             except (RequestException, ValueError) as ex:
                 if not self._auto_update:
