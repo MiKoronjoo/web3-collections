@@ -1,5 +1,5 @@
 from threading import Thread
-from typing import Optional, Union, Any, List, Callable
+from typing import Optional, Union, Any, List
 from collections import deque
 
 from requests.exceptions import RequestException
@@ -16,12 +16,10 @@ class MultiEndpointHTTPProvider(HTTPProvider):
             request_kwargs: Optional[Any] = None,
             session: Optional[Any] = None,
             auto_update: bool = True,
-            before_endpoint_update: Callable = None,
     ) -> None:
         self._uris = deque(endpoint_uris) if endpoint_uris else deque()
         super().__init__(self.current_endpoint, request_kwargs, session)
         self._auto_update = auto_update
-        self.before_endpoint_update = before_endpoint_update
 
     @property
     def current_endpoint(self):
@@ -64,7 +62,7 @@ class MultiEndpointHTTPProvider(HTTPProvider):
             f"Making request HTTP. URI: {self.endpoint_uri}, Method: {method}"
         )
         request_data = self.encode_rpc_request(method, params)
-        while i := 0 < max(1, len(self._uris)):
+        for _ in range(max(1, len(self._uris))):
             try:
                 raw_response = make_post_request(
                     self.endpoint_uri, request_data, **self.get_request_kwargs()
@@ -78,17 +76,7 @@ class MultiEndpointHTTPProvider(HTTPProvider):
                 self.logger.error(
                     f"{type(ex)}: from {self.endpoint_uri}: {ex}"
                 )
-                if self.before_endpoint_update is None:
-                    self.update_endpoint()
-                    i += 1
-                else:
-                    current_endpoint = self.current_endpoint
-                    while i < max(1, len(self._uris)):
-                        is_ok = self.before_endpoint_update(current_endpoint, self.next_endpoint, ex)
-                        self.update_endpoint()
-                        i += 1
-                        if is_ok:
-                            break
+                self.update_endpoint()
             else:
                 break
         else:
